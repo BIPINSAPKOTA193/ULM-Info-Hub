@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULM Information Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ULM Information Hub</h1>
+            <p>Discover insights about the University of Louisiana Monroe!</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <input type="text" id="queryInput" placeholder="Type your question here..." />
+            <button onclick="sendQuery()">🔍</button>
+            <button onclick="startVoiceRecognition()" class="voice-btn">🎤</button>
+        </div>
+
+        <!-- Response Section -->
+        <div class="response">
+            <p id="responseText">Your answer will appear here.</p>
+        </div>
+
+        <div class="previous-responses">
+            <h2>Previous Questions</h2>
+            <ul id="previousResponsesList"></ul>
+        
+            <!-- Pagination Controls -->
+            <div id="pagination" class="pagination-controls">
+                <button onclick="previousPage()">Previous</button>
+                <span id="pageInfo"></span>
+                <button onclick="nextPage()">Next</button>
+            </div>
+        
+            <!-- Clear History Button -->
+            <button id="clearHistoryBtn" onclick="clearHistory()">Clear History</button>
+        </div>
+        
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2024 ULM Information Hub. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
