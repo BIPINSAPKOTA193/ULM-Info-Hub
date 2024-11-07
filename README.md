@@ -25,7 +25,7 @@ Welcome to the **ULM Information Hub**! This project is a **FastAPI-based web ap
 
 ### Prerequisites
 
-- **Python 3.7 or later**
+- **Python 3.9 or later**
 - **Git** for cloning the repository
 - **Node.js** (optional, for additional front-end work)
 
