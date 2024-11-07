@@ -1,22 +1,81 @@
+import openai
+import numpy as np
+import faiss
 import json
+import os
 
-# Load ULM dataset (question-answer pairs)
-def load_ulm_dataset():
-    with open("app/data/ulm_dataset.json", "r") as file:
-        return json.load(file)
+# Explicitly set the OpenAI API key
+openai_api_key = os.getenv("OPENAI_API_KEY")  # Replace with your actual API key
 
-def get_university_info():
-    # Return the entire dataset of Q&A
-    return load_ulm_dataset()
+# FAISS index setup
+embedding_size = 1536  # Adjust based on the embedding model used
+index = faiss.IndexFlatL2(embedding_size)  # L2 distance is standard for FAISS
+embeddings = []  # Temporarily store embeddings for each entry
+responses = []  # Store corresponding answers for retrieval
 
-def process_user_input(prompt: str):
-    # Load dataset
-    dataset = load_ulm_dataset()
+def get_embedding(text: str) -> np.ndarray:
+    """
+    Generate an embedding for the input text using OpenAI's API.
+    Returns a numpy array of the embedding.
+    """
+    response = openai.Embedding.create(
+        input=text,
+        model="text-embedding-ada-002"
+    )
+    return np.array(response['data'][0]['embedding'])
 
-    # Search for a matching question
-    for entry in dataset:
-        if prompt.lower() in entry['question'].lower():
-            return entry['answer']
+def add_to_index(embedding: np.ndarray, response: str):
+    """Add a new entry to the FAISS index."""
+    global embeddings, responses
+    embeddings.append(embedding)
+    responses.append(response)
+    index.add(np.array(embedding).reshape(1, -1).astype("float32"))
+
+def setup_faiss_index():
+    """Load dataset, generate embeddings, and add them to FAISS index."""
+    with open("app/data/ulm_dataset.json", "r") as f:
+        data = json.load(f)
+    for item in data:
+        question = item["question"]
+        answer = item["answer"]
+        embedding = get_embedding(question)
+        add_to_index(embedding, answer)
+
+def vector_search(query_embedding: np.ndarray, top_k=1, distance_threshold=0.5):
+    """
+    Searches the FAISS vector database for the most similar entries.
+    Returns the closest response(s) if a match is found.
     
-    # Default response if no match is found
-    return "Sorry, I don't have an answer to that question."
+    Args:
+        query_embedding (np.ndarray): The embedding of the user's query.
+        top_k (int): The number of closest results to return.
+        distance_threshold (float): The maximum distance for a result to be considered a match.
+
+    Returns:
+        list: A list of the closest responses, or None if no close matches are found.
+    """
+    if index.ntotal == 0:
+        return None
+
+    # Search the FAISS index
+    query_vector = query_embedding.reshape(1, -1).astype("float32")  # Make sure the query is in the correct shape
+    distances, indices = index.search(query_vector, top_k)
+    
+    print(f"Search results: Distances: {distances}, Indices: {indices}")
+    
+    results = []
+    for i in range(top_k):
+        print(f"Checking distance: {distances[0][i]} with threshold: {distance_threshold}")
+        if distances[0][i] < distance_threshold:
+            response_index = indices[0][i]
+            print(f"Found matching response: {responses[response_index]}")
+            results.append(responses[response_index])
+
+    if len(results) == 0:
+        print("No results found under the threshold.")
+        return None
+
+    return results
+
+
+

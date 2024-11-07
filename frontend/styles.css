@@ -111,8 +111,21 @@ button:hover {
     animation: slideIn 0.5s ease-out;
 }
 
-#responseText {
-    color: #333;
+#loadingIndicator {
+    font-size: 1.2rem;
+    color: #840029;  /* ULM Maroon */
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Optional response styling */
+#responseText p {
+    margin-bottom: 10px;  /* Adds space between multiple responses */
+}
+
+#responseText strong {
+    font-size: 1.1rem;  /* Emphasizes questions in multi-response lists */
+    color: #840029;  /* ULM Maroon */
 }
 /* Previous Responses Section */
 .previous-responses {

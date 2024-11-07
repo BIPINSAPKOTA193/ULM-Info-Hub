@@ -3,3 +3,5 @@ uvicorn
 transformers
 pydantic
 requests
+faiss-cpu
+python-dotenv

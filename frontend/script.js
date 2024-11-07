@@ -13,18 +13,15 @@ function loadPreviousResponses() {
     previousResponsesList.innerHTML = ""; // Clear current list
 
     if (previousResponses.length === 0) {
-        // Show a message if no history is available
         previousResponsesList.innerHTML = "<li>No previous questions available.</li>";
-        document.getElementById("pagination").style.display = "none"; // Hide pagination controls
-        document.getElementById("clearHistoryBtn").style.display = "none"; // Hide clear history button
+        document.getElementById("pagination").style.display = "none";
+        document.getElementById("clearHistoryBtn").style.display = "none";
     } else {
-        // Display each question as a clickable list item
         pageResponses.forEach((item) => {
             const listItem = document.createElement("li");
             listItem.textContent = item.question;
             listItem.classList.add("clickable-question");
 
-            // Display corresponding answer when clicked
             listItem.onclick = () => {
                 document.getElementById("responseText").textContent = item.response;
             };
@@ -32,7 +29,6 @@ function loadPreviousResponses() {
             previousResponsesList.appendChild(listItem);
         });
 
-        // Show pagination and clear history controls if history exists
         document.getElementById("pagination").style.display = totalPages > 1 ? "flex" : "none";
         document.getElementById("clearHistoryBtn").style.display = "inline-block";
         document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages}`;
@@ -49,7 +45,6 @@ function saveResponse(question, response) {
 // Function to handle query submission
 function sendQuery() {
     const query = document.getElementById("queryInput").value.trim();
-
     if (query.length < 3) {
         alert("Please enter a more specific question.");
         return;
@@ -69,10 +64,23 @@ function sendQuery() {
         return response.json();
     })
     .then((data) => {
-        const responseText = data.response;
-        document.getElementById("responseText").textContent = responseText;
-        saveResponse(query, responseText);  // Save to local storage
-        loadPreviousResponses();  // Refresh the previous questions list
+        const responses = data.response;
+        
+        // Check if responses contain multiple items
+        if (Array.isArray(responses) && responses.length > 0) {
+            const responseText = responses.map(r => `<p><strong>${r.question}</strong>: ${r.answer}</p>`).join("");
+            document.getElementById("responseText").innerHTML = responseText;
+            saveResponse(query, responseText);
+        } else if (typeof responses === "string") {
+            document.getElementById("responseText").textContent = responses;
+            saveResponse(query, responses);
+        } else {
+            document.getElementById("responseText").textContent = "No relevant information found.";
+        }
+
+        // Clear input field and load previous responses
+        document.getElementById("queryInput").value = "";
+        loadPreviousResponses();
     })
     .catch((error) => {
         console.error("Fetch error:", error);
@@ -83,8 +91,8 @@ function sendQuery() {
 // Clear history and update the UI accordingly
 function clearHistory() {
     localStorage.removeItem("previousResponses");
-    currentPage = 1;  // Reset to first page
-    loadPreviousResponses();  // Refresh the display to show "No previous questions available."
+    currentPage = 1;
+    loadPreviousResponses();
     document.getElementById("responseText").textContent = "Search history has been cleared.";
 }
 
@@ -108,28 +116,33 @@ function previousPage() {
 // Load previous responses on page load
 window.onload = loadPreviousResponses;
 
+// Debounce function to limit rapid calls
+function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
 // Function to start voice recognition for the user's query
 function startVoiceRecognition() {
-    // Check if the browser supports SpeechRecognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Sorry, your browser doesn't support voice recognition.");
         return;
     }
 
-    // Initialize the voice recognition
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    // When voice recognition ends, send the recognized query
     recognition.onresult = function (event) {
         const voiceQuery = event.results[0][0].transcript;
         document.getElementById("queryInput").value = voiceQuery;
-        sendQuery();
+        debounce(sendQuery, 500)();  // Debounce to prevent multiple calls
     };
 
-    // Start listening for voice input
     recognition.start();
 }

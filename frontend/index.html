@@ -22,10 +22,11 @@
         </div>
 
         <!-- Response Section -->
-        <div class="response">
-            <p id="responseText">Your answer will appear here.</p>
-        </div>
+        <div id="responseText" aria-live="polite">Your answer will appear here.</div>
+        <div id="loadingIndicator" style="display: none;">Loading...</div>  <!-- Add this -->
 
+
+        <!-- Previous Questions and Pagination Controls -->
         <div class="previous-responses">
             <h2>Previous Questions</h2>
             <ul id="previousResponsesList"></ul>
@@ -33,14 +34,13 @@
             <!-- Pagination Controls -->
             <div id="pagination" class="pagination-controls">
                 <button onclick="previousPage()">Previous</button>
-                <span id="pageInfo"></span>
+                <span id="pageInfo">Page 1</span>
                 <button onclick="nextPage()">Next</button>
             </div>
         
             <!-- Clear History Button -->
             <button id="clearHistoryBtn" onclick="clearHistory()">Clear History</button>
         </div>
-        
 
         <!-- Footer -->
         <footer>
